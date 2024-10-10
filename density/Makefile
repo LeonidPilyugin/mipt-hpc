@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude -lm -Wall -Ofast -march=native -fopenmp -DTHREADS=4
+CFLAGS = -Iinclude -lm -Wall -Ofast -march=native -fopenmp -DTHREADS=8
 
 SRC_DIR = src
 BUILD_DIR = build

@@ -46,12 +46,10 @@ int main(int argc, char * argv[]) {
             grid_add(result[thread_id], temp[thread_id]);
         }
     }
-    fflush(stdout);
 
     for (i_t i = 1; i < THREADS; i++) {
         grid_add(result[0], result[i]);
     }
-    fflush(stdout);
 
     time = omp_get_wtime() - time;
     printf("\nTotal computation time: %lf s\n", time);
