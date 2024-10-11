@@ -36,7 +36,6 @@ int main(int argc, char * argv[]) {
 
     double time = omp_get_wtime();
 
-    fflush(stdout);
     #pragma omp parallel num_threads(THREADS)
     {
         i_t thread_id = omp_get_thread_num();
