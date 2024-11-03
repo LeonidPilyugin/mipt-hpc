@@ -166,7 +166,7 @@ void compute_fu(double x1, double x2, double y1, double y2, double z1, double z2
                 zz = z2 + lp * (double) (k * bs[2]);
                 dist = hypot(hypot(x1 - xx, y1 - yy), z1 - zz);
                 if (dist > 2.5) continue;
-                //if (dist < 0.1) printf("%e %e %e\n", x1 - xx, y1 - yy, z1 - zz);
+                if (dist < 0.1) printf("%e %e %e\n", x1 - xx, y1 - yy, z1 - zz);
                 dist6 = dist * dist * dist * dist * dist * dist;
                 res[0] += 4 * (1.0 / dist6 / dist6 - 1.0 / dist6);
                 force = 48 * (1.0 / dist6 / dist6 - 0.5 / dist6);
@@ -370,7 +370,7 @@ void simulate(Options * op) {
                     ) neighbor_indeces[neighbor][new_neighbor_particles[neighbor]++] = j;
                 }
             }
-            memcpy(particles2, particles, sizeof(double) * 10 * local_particles);
+            memcpy(particles2, particles, sizeof(double) * to_send);
             int old_local_particles = local_particles;
             local_particles = new_local_particles;
             for (int i = 0; i < 6; i++) local_particles += new_neighbor_particles[i];
@@ -386,18 +386,20 @@ void simulate(Options * op) {
                 FZ(particles, i, local_particles) = FZ(particles2, local_indeces[i], old_local_particles);
                 U(particles, i, local_particles) = U(particles2, local_indeces[i], old_local_particles);
             }
+            int k = old_local_particles;
             for (int neighbor = 0; neighbor < 6; neighbor++) {
                 for (int i = 0; i < new_neighbor_particles[neighbor]; i++) {
-                    X(particles, i, local_particles) = X(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    Y(particles, i, local_particles) = Y(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    Z(particles, i, local_particles) = Z(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    VX(particles, i, local_particles) = VX(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    VY(particles, i, local_particles) = VY(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    VZ(particles, i, local_particles) = VZ(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    FX(particles, i, local_particles) = FX(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    FY(particles, i, local_particles) = FY(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    FZ(particles, i, local_particles) = FZ(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
-                    U(particles, i, local_particles) = U(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    X(particles, k, local_particles) = X(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    Y(particles, k, local_particles) = Y(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    Z(particles, k, local_particles) = Z(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    VX(particles, k, local_particles) = VX(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    VY(particles, k, local_particles) = VY(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    VZ(particles, k, local_particles) = VZ(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    FX(particles, k, local_particles) = FX(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    FY(particles, k, local_particles) = FY(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    FZ(particles, k, local_particles) = FZ(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    U(particles, k, local_particles) = U(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
+                    k++;
                 }
             }
         SLAVE_END
