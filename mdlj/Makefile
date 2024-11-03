@@ -1,2 +1,2 @@
 all:
-	mpicc main.c -o mdlj -lm
+	mpicc main.c -o mdlj -lm -Wall
