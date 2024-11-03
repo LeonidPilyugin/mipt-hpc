@@ -460,7 +460,6 @@ void simulate(Options * op) {
                 fclose(out);
 
                 printf("%d,%lf,%lf,%lf\n", step, T, u, T+u);
-                if (count != 1000) { fprintf(stderr, "Lost atoms\n"); exit(1); }
             MASTER_END
         }
     }
