@@ -166,7 +166,7 @@ void compute_fu(double x1, double x2, double y1, double y2, double z1, double z2
                 zz = z2 + lp * (double) (k * bs[2]);
                 dist = hypot(hypot(x1 - xx, y1 - yy), z1 - zz);
                 if (dist > 2.5) continue;
-                if (dist < 0.1) printf("%e %e %e\n", x1 - xx, y1 - yy, z1 - zz);
+                if (dist < 0.1) { printf("%e %e %e\n", x1 - xx, y1 - yy, z1 - zz); exit(-1); }
                 dist6 = dist * dist * dist * dist * dist * dist;
                 res[0] += 4 * (1.0 / dist6 / dist6 - 1.0 / dist6);
                 force = 48 * (1.0 / dist6 / dist6 - 0.5 / dist6);
@@ -264,7 +264,6 @@ void simulate(Options * op) {
             memcpy(send_buf, particles, to_send * sizeof(double));
             // gather neighbor particles
             MPI_Neighbor_allgatherv(send_buf, to_send, MPI_DOUBLE, recv_buf, counts, displs, MPI_DOUBLE, op->comm);
-
             for (int i = 0; i < local_particles; i++) {
                 // compute forces and energies
                 double uf[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -340,6 +339,9 @@ void simulate(Options * op) {
                 x = fmod(x + bs[0] * lp * ((int) ((fabs(x) / ( bs[0] * lp))) + 1), bs[0] * lp);
                 y = fmod(y + bs[1] * lp * ((int) ((fabs(y) / ( bs[1] * lp))) + 1), bs[1] * lp);
                 z = fmod(z + bs[2] * lp * ((int) ((fabs(z) / ( bs[2] * lp))) + 1), bs[2] * lp);
+                X(particles, i, local_particles) = x;
+                Y(particles, i, local_particles) = y;
+                Z(particles, i, local_particles) = z;
                 if (
                     cell_bounds[0] <= x && cell_bounds[3] > x &&
                     cell_bounds[1] <= y && cell_bounds[4] > y &&
@@ -386,7 +388,7 @@ void simulate(Options * op) {
                 FZ(particles, i, local_particles) = FZ(particles2, local_indeces[i], old_local_particles);
                 U(particles, i, local_particles) = U(particles2, local_indeces[i], old_local_particles);
             }
-            int k = old_local_particles;
+            int k = new_local_particles;
             for (int neighbor = 0; neighbor < 6; neighbor++) {
                 for (int i = 0; i < new_neighbor_particles[neighbor]; i++) {
                     X(particles, k, local_particles) = X(recv_buf + displs[neighbor], neighbor_indeces[neighbor][i], counts[neighbor] / 10);
@@ -437,6 +439,7 @@ void simulate(Options * op) {
                 fprintf(out, "ITEM: NUMBER OF ATOMS\n%d\n", total_particles);
                 fprintf(out, "ITEM: BOX BOUNDS pp pp pp\n0.0 %lf\n0.0 %lf\n0.0 %lf\n", bs[0] * lp, bs[1] * lp, bs[2] * lp);
                 fprintf(out, "ITEM: ATOMS x y z vx vy vz\n");
+                int count = 0;
                 for (int j = 0; j < domens; j++) {
                     for (int k = 0; k < counts[j] / 7; k++) {
                         fprintf(
@@ -450,12 +453,14 @@ void simulate(Options * op) {
                         );
                         T += 0.5 * hypot(hypot(VX(recv_buf + displs[j], k, counts[j] / 7), VY(recv_buf + displs[j], k, counts[j] / 7)), VZ(recv_buf + displs[j], k, counts[j] / 7));
                         u += FX(recv_buf + displs[j], k, counts[j] / 7);
+                        count++;
                     }
                 }
 
                 fclose(out);
 
                 printf("%d,%lf,%lf,%lf\n", step, T, u, T+u);
+                if (count != 1000) { fprintf(stderr, "Lost atoms\n"); exit(1); }
             MASTER_END
         }
     }
