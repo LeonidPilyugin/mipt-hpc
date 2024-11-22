@@ -44,13 +44,13 @@ __global__ void shared_matrix_multiply(double * left, double * right, int3 size,
 
     for (int i = 0; i < size.x; i += BLOCK) {
         // load chunks to shared memory
-        s_left[TX][TY] = left[INDEX(rr, TY + i, size.y, size.x)];
-        s_right[TX][TY] = right[INDEX(TX + i, rc, size.x, size.z)];
+        s_left[TY][TX] = left[INDEX(rr, TY + i, size.y, size.x)];
+        s_right[TY][TX] = right[INDEX(TX + i, rc, size.x, size.z)];
         __syncthreads();
 
         // compute sum
         for (int j = 0; j < BLOCK; j++)
-            sum += s_left[TX][j] * s_right[j][TY];
+            sum += s_left[j][TX] * s_right[TY][j];
 
         __syncthreads();
     }
